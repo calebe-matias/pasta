@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercício do Alien</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style> body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } </style>
+</head>
+
+<body>
+    <script>
+        // Criamos uma constante para a largura e altura do jogo
+        const larguraJogo = 700;
+        const alturaJogo = 850;
+
+        // Criamos uma constante com atributos do jogo, que será passada como parâmetro para a instância do objeto Phaser.Game
+        const config = {
+            type: Phaser.AUTO,
+            width: larguraJogo,
+            height: alturaJogo,
+
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            },
+            // Ativamos a física do jogo
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 },
+                    debug: true
+                }
+            }
+        };
+
+        // Criamos uma nova instância do objeto Phaser.Game e passamos a constante config como parâmetro
+        const game = new Phaser.Game(config);
+        // Criamos as variáveis que serão utilizadas no jogo
+        var alien;
+        var teclado;
+        var turbo;
+        var plataforma;
+        var moeda;
+        var pontuacao = 0;
+        var placar;
+        var alien2;
+        // Criamos as funções preload, create e update, que são chamadas automaticamente pelo Phaser
+        function preload() {
+            this.load.image('background', 'assets/bg.png');
+            this.load.image('alien', 'assets/alienigena.png');
+            this.load.image('turbo', 'assets/turbo.png');
+            this.load.image('plataforma', 'assets/tijolos.png');
+            this.load.image('moeda', 'assets/moeda.png');
+            this.load.image('alien2', 'assets/green-alien.webp');
+        }
+
+        function create() {
+            // Adicionamos a imagem de fundo do jogo
+            this.add.image(larguraJogo/2, alturaJogo/2, 'background');
+            // Adicionamos o personagem Alien
+            alien = this.physics.add.sprite(larguraJogo/2, 0, 'alien');
+            // Ativamos a física para as bordas do jogo
+            alien.setCollideWorldBounds(true);
+            // Adicionamos a variável teclado para os cursores do teclado
+            teclado = this.input.keyboard.createCursorKeys();
+            // Adicionamos a plataforma
+            plataforma = this.physics.add.staticImage(larguraJogo/2, alturaJogo/2, 'plataforma');
+            // Adicionamos o efeito de turbo
+            turbo = this.add.sprite(0, 0, 'turbo');
+            turbo.setVisible(false);
+
+            // Adicionamos a colisão entre o Alien e a plataforma
+            this.physics.add.collider(alien, plataforma);
+
+            // Adicionamos a moeda
+            moeda = this.physics.add.sprite(larguraJogo/2, 0, 'moeda');
+            moeda.setCollideWorldBounds(true);
+            moeda.setBounce(0.75);
+            this.physics.add.collider(moeda, plataforma);
+
+            // Adicionamos o placar 
+            placar = this.add.text(50, 50, 'Moedas: ' + pontuacao, {fontSize:'45px', fill:'#495613'});
+
+            // Evento de colisão entre o Alien e a moeda
+            this.physics.add.overlap(alien, moeda, function() {
+                moeda.setVisible(false);
+                var posiçãoMoeda_y = Phaser.Math.RND.between(50, 650); // Gera um número aleatório entre 50 e 650
+                moeda.setPosition(posiçãoMoeda_y, 100); // Define a posição da moeda com base no número aleatório gerado
+                
+                pontuacao+=1; // Incrementa a pontuação
+                placar.setText('Moedas: ' + pontuacao); // Atualiza o texto do placar
+                
+                moeda.setVisible(true); // Torna a moeda visível
+            });
+
+            // Adicionamos o segundo alien como uma plataforma (estática)
+            alien2 = this.physics.add.staticImage(larguraJogo/2, alturaJogo/2 - 110, 'alien2').setScale(0.2);
+
+            // Adicionamos a colisão entre o Alien e o segundo alien (plataforma)
+            this.physics.add.collider(alien, alien2);
+        }
+
+
+        function update() {
+            // Movimento para a esquerda
+            if (teclado.left.isDown) {
+                alien.setVelocityX(-160);
+            }
+
+            // Movimento para a direita
+            else if (teclado.right.isDown) {
+                alien.setVelocityX(160);
+            }
+            else {
+                alien.setVelocityX(0);
+            }
+
+            // Movimento para cima
+            if (teclado.up.isDown) {
+                alien.setVelocityY(-160);
+                ativarTurbo();
+            }
+            else {
+                desativarTurbo();
+            }
+            // Movimento para baixo 
+            if (teclado.down.isDown) {
+                alien.setVelocityY(160);
+            }
+
+            turbo.setPosition(alien.x, alien.y + alien.height/2);
+        }
+        
+        function ativarTurbo() {
+            turbo.setVisible(true);
+        }
+        function desativarTurbo() {
+            turbo.setVisible(false);
+        }
+    </script>
+</body>
+</html>
